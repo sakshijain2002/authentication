@@ -1,12 +1,10 @@
 package com.auth.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.bouncycastle.tsp.TimeStampRequest;
-import org.hibernate.annotations.Cascade;
-
 import java.sql.Time;
-import java.util.HashSet;
+import java.time.LocalTime;
 import java.util.Set;
 
 @Entity
@@ -21,26 +19,27 @@ public class UserCredential {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
-    private String firstName;
-    private String middleName;
-    private String lastName;
+    private Integer id;
+    private String name;
+
+    private String profilePicture;
+
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @JsonIgnore
     private Set<Role> role;
     @Column(unique = true)
     private String email;
     private String password;
     private Long contactNumber;
-    private String address;
-    private String dob;
     private String gender;
     private String status;
-    private Time timeStamp;
+    private LocalTime timeStamp;
+
 
 
 }

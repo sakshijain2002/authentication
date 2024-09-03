@@ -40,7 +40,7 @@ public class AuthConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
                 .authorizeRequests().requestMatchers("/auth/admin/dashboard","/auth/delete/{id}").hasRole("ADMIN")
-                .requestMatchers("/test").authenticated().requestMatchers("/auth/register","/auth/token","/auth/validate","/auth/refreshToken").permitAll()
+                .requestMatchers("/test").authenticated().requestMatchers("auth/getAll","/auth/register","/auth/token","/auth/validate","/auth/refreshToken","auth/update/{id}","auth/get/{id}").permitAll()
                 .anyRequest()
                 .authenticated().and()
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

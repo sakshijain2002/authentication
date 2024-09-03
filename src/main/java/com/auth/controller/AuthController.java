@@ -17,8 +17,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin
 public class AuthController {
     @Autowired
     private AuthService service;
@@ -30,43 +33,41 @@ public class AuthController {
 
     private UserCredential user;
 
+    @GetMapping("/getAll")
+    public List<UserCredential> getAll(){
+        return service.getAll();
+    }
+    @GetMapping("/get/{id}")
+    public UserCredential getById(@PathVariable Integer id){
+        return service.getById(id);
+    }
+
     @PostMapping("/register")
     public String addNewUser(@RequestBody UserCredential user) {
         return service.saveUser(user);
     }
 
-//    @PostMapping("/token")
-//    public JwtResponse getToken(@RequestBody AuthRequest authRequest) {
-//        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-//        if (authenticate.isAuthenticated()) {
-//           RefreshToken refreshToken = refreshTokenService.createRefreshToken(authRequest.getUsername());
-//          return   JwtResponse.builder()
-//                    .accessToken(service.generateToken(authRequest.getUsername()))
-//                    .token(refreshToken.getToken()).build();
-//        } else {
-//            throw new RuntimeException("invalid access");
-//        }
-//    }
-@PostMapping("/token")
-public JwtResponse getToken(@RequestBody AuthRequest authRequest) {
+
+   @PostMapping("/token")
+    public JwtResponse getToken(@RequestBody AuthRequest authRequest) {
     try {
         // Authenticate the user
         Authentication authenticate = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+                new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
         );
 
         if (authenticate.isAuthenticated()) {
             // Check if a refresh token already exists for this user
-            RefreshToken existingToken = refreshTokenService.findByUserName(authRequest.getUsername())
-                    .orElseGet(() -> refreshTokenService.createRefreshToken(authRequest.getUsername()));
+            RefreshToken existingToken = refreshTokenService.findByUserName(authRequest.getEmail())
+                    .orElseGet(() -> refreshTokenService.createRefreshToken(authRequest.getEmail()));
 
             // Generate new access token
 //            String accessToken = service.generateToken(authRequest.getUsername());
 
             // Return response with new access token and existing or new refresh token
             return JwtResponse.builder()
-                    .accessToken(service.generateToken(authRequest.getUsername()))
-                    .token(existingToken.getToken())
+                    .accessToken(service.generateToken(authRequest.getEmail()))
+                    .refreshToken(existingToken.getRefreshToken())
                     .build();
         } else {
             throw new RuntimeException("Invalid credentials or access denied");
@@ -78,32 +79,27 @@ public JwtResponse getToken(@RequestBody AuthRequest authRequest) {
     }
 }
 
-//    @GetMapping("/validate")
-//    public String validateToken(@RequestParam("token") String token) {
-//        service.validateToken(token);
-//        return "Token is valid";
-//    }
     @PostMapping("/refreshToken")
     public JwtResponse refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest){
-     return refreshTokenService.findByToken(refreshTokenRequest.getToken())
+     return refreshTokenService.findByToken(refreshTokenRequest.getRefreshToken())
              .map(refreshTokenService::verifyExpiration)
              .map(RefreshToken::getUserCredential)
              .map(userCredential -> {
-                 String accessToken = service.generateToken(userCredential.getFirstName());
+                 String accessToken = service.generateToken(userCredential.getName());
                  return JwtResponse.builder()
                          .accessToken(accessToken)
-                         .token(refreshTokenRequest.getToken())
+                         .refreshToken(refreshTokenRequest.getRefreshToken())
                          .build();
 
              }).orElseThrow(()->new RuntimeException("Refresh Token is not in database"));
 
     }
-//    @DeleteMapping("delete/{id}")
-//    @Secured("ROLE_ADMIN")
-//    public String deleteById(@PathVariable Integer id){
-//        service.deleteUserById(id);
-//        return "user deleted";
-//    }
+
+    @PutMapping("/update/{id}")
+    public UserCredential updateRecordById(@PathVariable Integer id,@RequestBody UserCredential userCredential){
+        return service.updateRecordById(id,userCredential);
+    }
+
 
     @Secured("ROLE_ADMIN")
     @GetMapping("/admin/dashboard")

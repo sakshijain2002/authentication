@@ -18,27 +18,27 @@ public class RefreshTokenService {
     @Autowired
     private UserCredentialRepository userRepository;
 
-    public RefreshToken createRefreshToken(String username){
+    public RefreshToken createRefreshToken(String email){
         RefreshToken refreshToken = RefreshToken.builder()
-                .userCredential(userRepository.findByFirstName(username).get())
-                .token(UUID.randomUUID().toString())
+                .userCredential(userRepository.findByEmail(email).get())
+                .refreshToken(UUID.randomUUID().toString())
                 .expiryDate(Instant.now().plusMillis(600000))
                 .build();
         return tokenRepository.save(refreshToken);
     }
 
-    public Optional<RefreshToken> findByToken(String token){
-        return tokenRepository.findByToken(token);
+    public Optional<RefreshToken> findByToken(String refreshToken){
+        return tokenRepository.findByRefreshToken(refreshToken);
     }
-    public RefreshToken verifyExpiration(RefreshToken token){
-        if(token.getExpiryDate().compareTo(Instant.now())<0){
-            tokenRepository.delete(token);
-            throw new RuntimeException(token.getToken() +"Refresh Token was expired");
+    public RefreshToken verifyExpiration(RefreshToken refreshToken){
+        if(refreshToken.getExpiryDate().compareTo(Instant.now())<0){
+            tokenRepository.delete(refreshToken);
+            throw new RuntimeException(refreshToken.getRefreshToken() +"Refresh Token was expired");
         }
-        return token;
+        return refreshToken;
     }
-    public Optional<RefreshToken> findByUserName(String username) {
-        UserCredential user = userRepository.findByFirstName(username)
+    public Optional<RefreshToken> findByUserName(String email) {
+        UserCredential user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return tokenRepository.findByUserCredential(user);

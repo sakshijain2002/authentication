@@ -6,10 +6,16 @@ import com.auth.entity.UserCredential;
 
 import com.auth.repository.RoleRepository;
 import com.auth.repository.UserCredentialRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -24,6 +30,8 @@ public class AuthService {
 
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private ModelMapper modelMapper;
 
 
 //    public String saveUser(UserCredential credential) {
@@ -33,6 +41,7 @@ public class AuthService {
 //        return "user added to the system";
 //    }
 public String saveUser(UserCredential userCredential) {
+
     // Encrypt the password
     userCredential.setPassword(passwordEncoder.encode(userCredential.getPassword()));
     if (repository.existsByEmail(userCredential.getEmail())) {
@@ -54,13 +63,33 @@ public String saveUser(UserCredential userCredential) {
         }
     }
 
+
     // Save the user with roles
     repository.save(userCredential);
     return "User registered successfully";
 }
 
+ public List<UserCredential> getAll(){
+    return  repository.findAll();
+ }
+ public UserCredential getById(Integer id){
+    return repository.findById(id).orElseThrow(()->new RuntimeException("data not found"));
+ }
+
     public void deleteUserById(Integer id){
         repository.deleteById(id);
+    }
+
+    public UserCredential updateRecordById(Integer id, UserCredential record) {
+
+        Optional<UserCredential> userRecord = repository.findById(id);
+        if (userRecord.isPresent()) {
+            UserCredential user = userRecord.get();
+            modelMapper.getConfiguration().setSkipNullEnabled(true);
+            modelMapper.map(record,user);
+             repository.save(user);
+        }
+       return record;
     }
 
 

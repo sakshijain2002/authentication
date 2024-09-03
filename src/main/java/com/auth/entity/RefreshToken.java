@@ -17,7 +17,7 @@ public class RefreshToken {
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private int id;
 //    @Column(unique = true)
-    private String token;
+    private String refreshToken;
     private Instant expiryDate;
     @OneToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")

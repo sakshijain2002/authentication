@@ -21,7 +21,7 @@ public class CustomUserDetails implements UserDetails {
     private List<GrantedAuthority> roles;
     private UserCredential userCredential;
     public CustomUserDetails(UserCredential userCredential) {
-        this.username = userCredential.getFirstName();
+        this.username = userCredential.getName();
         this.password = userCredential.getPassword();
         roles = (userCredential.getRole().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRole())).collect(Collectors.toList()));
